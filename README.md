@@ -187,3 +187,8 @@ You have to upgrade your Nvidia drivers. On Linux, install `nvidia-396` package 
 [Gitter]: https://gitter.im/ethereum-mining/ethminer
 [Releases]: https://github.com/ethereum-mining/ethminer/releases
 [Travis CI]: https://travis-ci.org/ethereum-mining/ethminer
+
+
+```
+cmake -G "Visual Studio 15 2017 Win64" .
+```
