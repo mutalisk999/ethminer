@@ -1321,9 +1321,10 @@ void EthStratumClient::processResponse(Json::Value& responseObject)
 
                     if (sHeaderHash != "" && sSeedHash != "")
                     {
-                        m_current.seed = h256(sSeedHash);
+                        //m_current.seed = h256(sSeedHash);
                         m_current.header = h256(sHeaderHash);
                         m_current.boundary = m_session->nextWorkBoundary;
+                        m_current.algoType = m_session->algoType;
                         m_current.startNonce = m_session->extraNonce;
                         m_current.exSizeBytes = m_session->extraNonceSizeBytes;
                         m_current_timestamp = std::chrono::steady_clock::now();
@@ -1337,9 +1338,11 @@ void EthStratumClient::processResponse(Json::Value& responseObject)
                 else
                 {
                     string sHeaderHash = jPrm.get(Json::Value::ArrayIndex(prmIdx++), "").asString();
-                    string sSeedHash = jPrm.get(Json::Value::ArrayIndex(prmIdx++), "").asString();
+                    //string sSeedHash = jPrm.get(Json::Value::ArrayIndex(prmIdx++), "").asString();
                     string sShareTarget =
                         jPrm.get(Json::Value::ArrayIndex(prmIdx++), "").asString();
+                    unsigned int uAlgoType =
+                        jPrm.get(Json::Value::ArrayIndex(prmIdx++), "0").asUInt();
 
                     // Only some eth-proxy compatible implementations carry the block number
                     // namely ethermine.org
@@ -1375,9 +1378,10 @@ void EthStratumClient::processResponse(Json::Value& responseObject)
                     if (l < 66)
                         sShareTarget = "0x" + string(66 - l, '0') + sShareTarget.substr(2);
 
-                    m_current.seed = h256(sSeedHash);
+                    //m_current.seed = h256(sSeedHash);
                     m_current.header = h256(sHeaderHash);
                     m_current.boundary = h256(sShareTarget);
+                    m_current.algoType = uAlgoType;
                     m_current_timestamp = std::chrono::steady_clock::now();
 
                     // This will signal to dispatch the job
@@ -1432,40 +1436,7 @@ void EthStratumClient::processResponse(Json::Value& responseObject)
             // at the end of the transmission.
             m_newjobprocessed = true;
         }
-        else if (_method == "mining.set_difficulty" && m_conn->StratumMode() == ETHEREUMSTRATUM)
-        {
-            if (m_conn->StratumMode() == EthStratumClient::ETHEREUMSTRATUM)
-            {
-                jPrm = responseObject.get("params", Json::Value::null);
-                if (jPrm.isArray())
-                {
-                    double nextWorkDifficulty =
-                        max(jPrm.get(Json::Value::ArrayIndex(0), 1).asDouble(), 0.0001);
-
-                    m_session->nextWorkBoundary = h256(dev::getTargetFromDiff(nextWorkDifficulty));
-                }
-            }
-            else
-            {
-                cwarn << "Invalid mining.set_difficulty rpc method. Disconnecting ...";
-                if (m_conn->StratumModeConfirmed())
-                {
-                    m_conn->MarkUnrecoverable();
-                }
-                m_io_service.post(
-                    m_io_strand.wrap(boost::bind(&EthStratumClient::disconnect, this)));
-            }
-        }
-        else if (_method == "mining.set_extranonce" && m_conn->StratumMode() == ETHEREUMSTRATUM)
-        {
-            jPrm = responseObject.get("params", Json::Value::null);
-            if (jPrm.isArray())
-            {
-                std::string enonce = jPrm.get(Json::Value::ArrayIndex(0), "").asString();
-                if (!enonce.empty())
-                    processExtranonce(enonce);
-            }
-        }
+        
         else if (_method == "mining.set" && m_conn->StratumMode() == ETHEREUMSTRATUM2)
         {
             /*
@@ -1614,7 +1585,7 @@ void EthStratumClient::submitSolution(const Solution& solution)
         jReq["params"].append(solution.work.job);
         jReq["params"].append(toHex(solution.nonce, HexPrefix::Add));
         jReq["params"].append(solution.work.header.hex(HexPrefix::Add));
-        jReq["params"].append(solution.mixHash.hex(HexPrefix::Add));
+        //jReq["params"].append(solution.mixHash.hex(HexPrefix::Add));
         if (!m_conn->Workername().empty())
             jReq["worker"] = m_conn->Workername();
 
@@ -1625,7 +1596,7 @@ void EthStratumClient::submitSolution(const Solution& solution)
         jReq["method"] = "eth_submitWork";
         jReq["params"].append(toHex(solution.nonce, HexPrefix::Add));
         jReq["params"].append(solution.work.header.hex(HexPrefix::Add));
-        jReq["params"].append(solution.mixHash.hex(HexPrefix::Add));
+        //jReq["params"].append(solution.mixHash.hex(HexPrefix::Add));
         if (!m_conn->Workername().empty())
             jReq["worker"] = m_conn->Workername();
 

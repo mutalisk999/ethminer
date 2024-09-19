@@ -47,6 +47,8 @@ struct Session
     string workerId = "";
     string algo = "ethash";
     unsigned int epoch = 0;
+    unsigned int algoType = 0;
+
     chrono::steady_clock::time_point lastTxStamp = chrono::steady_clock::now();
 
 };
