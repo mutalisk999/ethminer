@@ -587,15 +587,15 @@ void EthStratumClient::connect_handler(const boost::system::error_code& ec)
     - 4th pass EthStratumClient::STRATUM          (0)
     */
 
-    if (m_conn->Version() < 999)
-    {
-        m_conn->SetStratumMode(m_conn->Version(), true);
-    }
-    else
-    {
-        if (!m_conn->StratumModeConfirmed() && m_conn->StratumMode() == 999)
-            m_conn->SetStratumMode(3, false);
-    }
+    //if (m_conn->Version() < 999)
+    //{
+    //    m_conn->SetStratumMode(m_conn->Version(), true);
+    //}
+    //else
+    //{
+    //    if (!m_conn->StratumModeConfirmed() && m_conn->StratumMode() == 999)
+    //        m_conn->SetStratumMode(3, false);
+    //}
 
 
     Json::Value jReq;
@@ -603,6 +603,7 @@ void EthStratumClient::connect_handler(const boost::system::error_code& ec)
     jReq["method"] = "mining.subscribe";
     jReq["params"] = Json::Value(Json::arrayValue);
 
+    m_conn->SetStratumMode(EthStratumClient::ETHPROXY);
 
     switch (m_conn->StratumMode())
     {
@@ -1576,6 +1577,12 @@ void EthStratumClient::submitSolution(const Solution& solution)
     jReq["method"] = "mining.submit";
     jReq["params"] = Json::Value(Json::arrayValue);
 
+    auto nonceHex = toHex(solution.nonce);
+    auto nonceBytes = fromHex(nonceHex);
+    byte nonceBytesR[8];
+    for (int i = 0; i < 8; i++)
+        nonceBytesR[i] = nonceBytes[7 - i];
+
     switch (m_conn->StratumMode())
     {
     case EthStratumClient::STRATUM:
@@ -1583,7 +1590,8 @@ void EthStratumClient::submitSolution(const Solution& solution)
         jReq["jsonrpc"] = "2.0";
         jReq["params"].append(m_conn->User());
         jReq["params"].append(solution.work.job);
-        jReq["params"].append(toHex(solution.nonce, HexPrefix::Add));
+        jReq["params"].append(toHex(nonceBytesR, 2, HexPrefix::Add));
+        //jReq["params"].append(toHex(solution.nonce, HexPrefix::Add));
         jReq["params"].append(solution.work.header.hex(HexPrefix::Add));
         //jReq["params"].append(solution.mixHash.hex(HexPrefix::Add));
         if (!m_conn->Workername().empty())
@@ -1594,7 +1602,7 @@ void EthStratumClient::submitSolution(const Solution& solution)
     case EthStratumClient::ETHPROXY:
 
         jReq["method"] = "eth_submitWork";
-        jReq["params"].append(toHex(solution.nonce, HexPrefix::Add));
+        jReq["params"].append(toHex(nonceBytesR, 2, HexPrefix::Add));
         jReq["params"].append(solution.work.header.hex(HexPrefix::Add));
         //jReq["params"].append(solution.mixHash.hex(HexPrefix::Add));
         if (!m_conn->Workername().empty())

@@ -300,12 +300,14 @@ void CPUMiner::search(const dev::eth::WorkPackage& w)
         //    Farm::f().submitProof(sol);
         //}
 
-        auto nonceHex = toHex(nonce);
-        auto nonceBytes = fromHex(nonceHex);
         byte pDataIn[40];
         byte pDataOut[32];
+
+        auto nonceHex = toHex(nonce);
+        auto nonceBytes = fromHex(nonceHex);
+
         memcpy(pDataIn, (unsigned char*)header, 32);
-        memcpy(pDataIn, nonceBytes.data(), 8);
+        memcpy(pDataIn + 32, nonceBytes.data(), 8);
 
         if (w.algoType == 0)
         {
