@@ -45,7 +45,8 @@ struct Session
     unsigned int timeout = 30;  // Default to 30 seconds
     string sessionId = "";
     string workerId = "";
-    string algo = "ethash";
+    //string algo = "ethash";
+    string algo = "blake";
     unsigned int epoch = 0;
     unsigned int algoType = 0;
 
