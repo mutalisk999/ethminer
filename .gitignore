@@ -129,3 +129,13 @@ libethash-cpu/Release/
 libethash-cpu/ethash-cpu.dir/
 
 
+Makefile
+ethminer/Makefile
+ethminer/ethminer
+libapicore/Makefile
+libdevcore/Makefile
+libethash-cpu/Makefile
+libethcore/Makefile
+libhwmon/Makefile
+libpoolprotocols/Makefile
+
