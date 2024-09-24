@@ -21,6 +21,8 @@
 #include <iostream>
 #include "UintBig.h"
 
+#define _countof(a) (sizeof(a) / sizeof(*(a)))
+
 using namespace std;
 
 // misc
