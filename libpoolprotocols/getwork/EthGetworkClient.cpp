@@ -423,8 +423,6 @@ void EthGetworkClient::processResponse(Json::Value& JRes)
                 WorkPackage newWp;
                 
                 newWp.header = h256(JPrm.get(Json::Value::ArrayIndex(0), "").asString());
-                //newWp.seed = h256(JPrm.get(Json::Value::ArrayIndex(1), "").asString());
-                //newWp.boundary = h256(JPrm.get(Json::Value::ArrayIndex(2), "").asString());
                 newWp.boundary = h256(JPrm.get(Json::Value::ArrayIndex(1), "").asString());
                 newWp.algoType = JPrm.get(Json::Value::ArrayIndex(2), "").asUInt();
                 newWp.job = newWp.header.hex();
@@ -556,7 +554,6 @@ void EthGetworkClient::submitSolution(const Solution& solution)
         jReq["params"] = Json::Value(Json::arrayValue);
         jReq["params"].append("0x" + nonceHex);
         jReq["params"].append("0x" + solution.work.header.hex());
-        //jReq["params"].append("0x" + solution.mixHash.hex());
         send(jReq);
     }
 
