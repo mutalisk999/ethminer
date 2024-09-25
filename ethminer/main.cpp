@@ -389,7 +389,6 @@ public:
             return false;
         }
 
-
 #ifndef DEV_BUILD
 
         if (g_logOptions & LOG_CONNECT)

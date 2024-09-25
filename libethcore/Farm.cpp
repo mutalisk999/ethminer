@@ -17,6 +17,8 @@
 
 
 #include <libethcore/Farm.h>
+#include "libethash-cpu/UintBig.h"
+#include "libethash-cpu/BlakeHash.h"
 
 #if ETH_ETHASHCL
 #include <libethash-cl/CLMiner.h>
@@ -219,6 +221,8 @@ void Farm::setWork(WorkPackage const& _newWp)
 
     m_currentWp = _newWp;
 
+    m_Settings.ergodicity = 2;
+    m_currentWp.exSizeBytes = 0;
     // Check if we need to shuffle per work (ergodicity == 2)
     if (m_Settings.ergodicity == 2 && m_currentWp.exSizeBytes == 0)
         shuffle();
@@ -490,22 +494,37 @@ void Farm::submitProof(Solution const& _s)
 
 void Farm::submitProofAsync(Solution const& _s)
 {
-    //if (!m_Settings.noEval)
-    //{
-    //    Result r = EthashAux::eval(_s.work.epoch, _s.work.header, _s.nonce);
-    //    if (r.value > _s.work.boundary)
-    //    {
-    //        accountSolution(_s.midx, SolutionAccountingEnum::Failed);
-    //        cwarn << "GPU " << _s.midx
-    //              << " gave incorrect result. Lower overclocking values if it happens frequently.";
-    //        return;
-    //    }
-    //    m_onSolutionFound(Solution{_s.nonce, r.mixHash, _s.work, _s.tstamp, _s.midx});
-    //}
-    //else
-    //    m_onSolutionFound(_s);
+    if (!m_Settings.noEval)
+    {
+        byte input[40];
+        byte output[32];
 
-    m_onSolutionFound(_s);
+        auto nonceHex = toHex(_s.nonce);
+        auto nonceBytes = fromHex(nonceHex);
+
+        memcpy(input, (unsigned char*)_s.work.header.data(), 32);
+        memcpy(input + 32, nonceBytes.data(), 8);
+
+        if (_s.work.algoType == 0)
+            decred_hash((char*)output, (char*)input, 40);
+
+        else
+            sia_hash((char*)output, (char*)input, 40);
+
+        const h256 out{reinterpret_cast<byte*>(output), h256::ConstructFromPointer};
+        const auto hash = uintBig_t<32>(out.data());
+
+        if (hash.cmp(uintBig_t<32>(_s.work.boundary.data())) > 0)
+        {
+            accountSolution(_s.midx, SolutionAccountingEnum::Failed);
+            cwarn << "GPU " << _s.midx
+                    << " gave incorrect result. Lower overclocking values if it happens frequently.";
+            return;
+        }
+        m_onSolutionFound(_s);
+    }
+    else
+        m_onSolutionFound(_s);
 
 #ifdef DEV_BUILD
     if (g_logOptions & LOG_SUBMIT)

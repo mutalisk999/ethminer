@@ -265,17 +265,8 @@ void CPUMiner::kick_miner()
 
 void CPUMiner::search(const dev::eth::WorkPackage& w)
 {
-    //constexpr size_t blocksize = 30;
     constexpr size_t blocksize = 1;
-
-    // const auto& context = ethash::get_global_epoch_context_full(w.epoch);
-    // const auto header = ethash::hash256_from_bytes(w.header.data());
-    // const auto boundary = ethash::hash256_from_bytes(w.boundary.data());
     auto nonce = w.startNonce;
-
-    const auto header = w.header.data();
-    const auto boundary = w.boundary.data();
-    auto target = uintBig_t<32>(boundary);
 
     while (true)
     {
@@ -289,38 +280,25 @@ void CPUMiner::search(const dev::eth::WorkPackage& w)
             break;
 
 
-        // auto r = ethash::search(context, header, boundary, nonce, blocksize);
-        // if (r.solution_found)
-        //{
-        //    h256 mix{reinterpret_cast<byte*>(r.mix_hash.bytes), h256::ConstructFromPointer};
-        //    auto sol = Solution{r.nonce, mix, w, std::chrono::steady_clock::now(), m_index};
-
-        //    cpulog << EthWhite << "Job: " << w.header.abridged()
-        //           << " Sol: " << toHex(sol.nonce, HexPrefix::Add) << EthReset;
-        //    Farm::f().submitProof(sol);
-        //}
-
-        byte pDataIn[40];
-        byte pDataOut[32];
+        byte input[40];
+        byte output[32];
 
         auto nonceHex = toHex(nonce);
         auto nonceBytes = fromHex(nonceHex);
 
-        memcpy(pDataIn, (unsigned char*)header, 32);
-        memcpy(pDataIn + 32, nonceBytes.data(), 8);
+        memcpy(input, (unsigned char*)w.header.data(), 32);
+        memcpy(input + 32, nonceBytes.data(), 8);
 
         if (w.algoType == 0)
-        {
-            decred_hash((char*)pDataOut, (char*)pDataIn, 40);
-        }
+            decred_hash((char*)output, (char*)input, 40);
+        
         else
-        {
-            sia_hash((char*)pDataOut, (char*)pDataIn, 40);
-        }
+            sia_hash((char*)output, (char*)input, 40);
+        
 
-        const h256 out{reinterpret_cast<byte*>(pDataOut), h256::ConstructFromPointer};
+        const h256 out{reinterpret_cast<byte*>(output), h256::ConstructFromPointer};
         const auto hash = uintBig_t<32>(out.data());
-        if (hash.cmp(target) <= 0)
+        if (hash.cmp(uintBig_t<32>(w.boundary.data())) <= 0)
         {
             {
                 auto sol = Solution{nonce, h256{}, w, std::chrono::steady_clock::now(), m_index};

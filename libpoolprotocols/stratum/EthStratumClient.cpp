@@ -570,7 +570,7 @@ void EthStratumClient::connect_handler(const boost::system::error_code& ec)
     }
 
     // Clean buffer from any previous stale data
-    m_sendBuffer.consume(4096);
+    m_sendBuffer.consume(m_sendBuffer.capacity());
     clear_response_pleas();
 
     /*
@@ -1168,7 +1168,6 @@ void EthStratumClient::processResponse(Json::Value& responseObject)
             }
             else
             {
-                
                 if (m_onSolutionRejected)
                 {
                     cwarn << "Reject reason : "
@@ -1591,9 +1590,7 @@ void EthStratumClient::submitSolution(const Solution& solution)
         jReq["params"].append(m_conn->User());
         jReq["params"].append(solution.work.job);
         jReq["params"].append(toHex(nonceBytesR, 2, HexPrefix::Add));
-        //jReq["params"].append(toHex(solution.nonce, HexPrefix::Add));
         jReq["params"].append(solution.work.header.hex(HexPrefix::Add));
-        //jReq["params"].append(solution.mixHash.hex(HexPrefix::Add));
         if (!m_conn->Workername().empty())
             jReq["worker"] = m_conn->Workername();
 
@@ -1604,7 +1601,6 @@ void EthStratumClient::submitSolution(const Solution& solution)
         jReq["method"] = "eth_submitWork";
         jReq["params"].append(toHex(nonceBytesR, 2, HexPrefix::Add));
         jReq["params"].append(solution.work.header.hex(HexPrefix::Add));
-        //jReq["params"].append(solution.mixHash.hex(HexPrefix::Add));
         if (!m_conn->Workername().empty())
             jReq["worker"] = m_conn->Workername();
 
