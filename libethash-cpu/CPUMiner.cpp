@@ -343,22 +343,8 @@ void CPUMiner::workLoop()
             continue;
         }
 
-        //if (w.algo == "ethash")
         if (w.algoType == 0 || w.algoType == 1)
         {
-            // Epoch change ?
-            //if (current.epoch != w.epoch)
-            //{
-            //    if (!initEpoch())
-            //        break;  // This will simply exit the thread
-
-            //    // As DAG generation takes a while we need to
-            //    // ensure we're on latest job, not on the one
-            //    // which triggered the epoch change
-            //    current = w;
-            //    continue;
-            //}
-
             // Persist most recent job.
             // Job's differences should be handled at higher level
             current = w;
