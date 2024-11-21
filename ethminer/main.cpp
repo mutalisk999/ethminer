@@ -307,7 +307,7 @@ public:
 
 #endif
 
-#if ETH_ETHASHCL || ETH_ETHASHCUDA || ETH_ETHASH_CPU
+#if ETH_ETHASHCL || ETH_ETHASHCUDA || ETH_ETHASHCPU
 
         app.add_flag("--list-devices", m_shouldListDevices, "");
 
